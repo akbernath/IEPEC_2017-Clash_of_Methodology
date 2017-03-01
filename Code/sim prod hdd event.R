@@ -1,43 +1,56 @@
-##################################################
-##                                              ##
-##  Title:      sim prod hdd event.R            ##
-##  Author:     Andrew Bernath, Cadmus Group    ##
-##  Created:    7/11/2016                       ##
-##  Description:                                ##
-##    Simulation of facility consumption where  ##
-##    true model has the form:                  ##
-##      kWh ~ int + prod + hdd + event +        ##
-##            year 1 + prod*year1 + hdd*year1   ##
-##                                              ##
-##################################################
+##############################################################################
+## 
+##  Title:      sim prod hdd event.R
+##  Author:     Andrew Bernath & Maggie Buffum, Cadmus Group
+##  Created:    2/28/2017
+##  Description:
+##    Simulation of facility consumption where
+##    true model has the form: 
+##      kWh ~ int + prod + hdd + event + 
+##            year 1 + prod*year1 + hdd*year1
+## 
+##############################################################################
 
-##  Clear variables
-rm(list=ls())
-options(scipen=999)
+##############################################################################
+##### Prepare workspace and format sim data
+##############################################################################
 
-##  Include packages
-library(plyr)
-library(dplyr)
-library(xlsx)
-library(ggplot2)
+  ################################
+  ##### Prep Workspace
+  ##  Clear variables
+  rm(list=ls())
+  options(scipen=999)
+  
+  ##  Include packages
+  library(plyr)
+  library(dplyr)
+  library(xlsx)
+  library(ggplot2)
+  
+  ##  Set project folder)
+  if("Margaret.Buffum" %in% dir(file.path("C:","Users"))) projPath <- file.path("C:","Users","Margaret.Buffum" ,"Documents","GitHub","IEPEC SEM")
+  if("Andrew.Bernath"  %in% dir(file.path("C:","Users"))) projPath <- file.path("C:","Users","Andrew.Bernath"  ,"Documents","GitHub","IEPEC SEM")
+  
+  stopifnot(file.exists(projPath))
+  
+  ################################
+  ##### Read/Format Data
+  ## Read in SIM data
+  simData <- data.frame(read.csv(file.path(projPath,"Data","Data for Sim.csv"), 
+                                 header=T,
+                                 stringsAsFactors=F))
+  head(simData)
+  
+  ##  Format numbers
+  for(ii in 1:length(simData)) {
+    simData[,ii] <- as.numeric(simData[,ii])
+  }
 
-
-##  Set project folder
-projPath     <- "C:/Users/andrew.bernath/Documents/JSM Abstract/Simulation"
-stopifnot(file.exists(projPath))
-
-simData <- data.frame(read.csv(file.path(projPath,"data","Data for Sim.csv"), 
-                               header=T,
-                               stringsAsFactors=F))
-head(simData)
-
-##  Fix numbers
-for(ii in 1:length(simData)) {
-  simData[,ii] <- as.numeric(simData[,ii])
-}
-
-
-
+  
+##############################################################################
+##### Create data??
+##############################################################################
+  
 ###############  CASE 3: TWO VARIABLES WITH YEAR 1 EVENT  ###############
 
 ##  Monthly data with two baseline years
@@ -60,17 +73,19 @@ coef.hdd.Y1    <- -459.0
 ##  Facility data input
 beta.true <- c(coef.intercept, coef.prod, coef.hdd, coef.event.Y1, 
                coef.year1, coef.prod.Y1, coef.hdd.Y1)
-X         <- data.frame(intercept = rep(1, n.period), 
-                        prod      = simData$prod,
-                        hdd       = simData$HDD50,
-                        event_Y1  = simData$event_Y1,
-                        year1     = simData$year1, 
-                        prod_Y1   = simData$prod_Y1,
-                        hdd_Y1    = simData$HDD_Y1
+
+X         <- data.frame( intercept = rep(1, n.period)
+                        ,prod      = simData$prod
+                        ,hdd       = simData$HDD50
+                        ,event_Y1  = simData$event_Y1
+                        ,year1     = simData$year1
+                        ,prod_Y1   = simData$prod_Y1
+                        ,hdd_Y1    = simData$HDD_Y1
 )
-X.pre     <- X[ 1:24,]
-X.post    <- X[25:36,]
-    
+
+## Separate data into pre/post periods
+X.pre     <- X[ 1:24,] # 24 months of pre data
+X.post    <- X[25:36,] # 12 months of post data
 
 
 ###############################################################################
@@ -210,7 +225,7 @@ savingsSim.func <- function(modError.in) {
 
 
 ##  Repeat the simulation 10,000 times for each model error input
-N.sim <- 10000
+N.sim <- 10
 modError <- 200000
 
 for(ii in 1:N.sim) {

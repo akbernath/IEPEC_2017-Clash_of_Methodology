@@ -55,9 +55,9 @@
   simCoeff$Coefficient
 
   ##  Format numbers
-  # for(ii in 1:length(simData)) {
-  #   simData[,ii] <- as.numeric(simData[,ii])
-  # }
+  for(ii in 2:length(simData)) {
+    simData[,ii] <- as.numeric(simData[,ii])
+  }
 
   
 ##############################################################################
@@ -98,11 +98,13 @@ X         <- data.frame( rep(1, nrow(simData))
                         , simData$prog_x_prod2
                         , simData$prog_x_noProd
 )
+names(X) <- c(simCoeff$Coefficient)
+
 
 ## Separate data into pre/post periods
-X.pre     <- X[which(X$simData.prog_ind == 0),] # two years of pre data
-X.post    <- X[which(X$simData.prog_ind == 1),] # two years of post data
-
+X.pre     <- X[which(X$prog_ind == 0),] # two years of pre data
+X.post    <- X[which(X$prog_ind == 1),] # two years of post data
+# -which(names(X)=="prog_ind")
 
 ###############################################################################
 #########################  BEGIN SIMULATION FUNCTION  #########################
@@ -115,17 +117,19 @@ X.post    <- X[which(X$simData.prog_ind == 1),] # two years of post data
     # CV for savings estimates
     # Model selection criteria (MSE, AIC, BIC, Adj. R^2)
 
+modError.in <- 0.02*mean(simData$sim_kWh[which(simData$prog_ind == 0)])
+df.in <- X
 
-savingsSim.func <- function(modError.in) {
+savingsSim.func <- function(df.in, modError.in) {
   
   ######  TRUE MODEL  ######
   
   ##  Create vector of model errors
-  mod.epsilon   <- rnorm(n.period, 0, modError.in)
+  mod.epsilon   <- rnorm(nrow(df.in), 0, modError.in)
   
   ##  Create BL and SEM response vectors with true parameters
-    kWh.bl   <- (as.matrix(X[,1:3]) %*% beta.true[1:3]) + mod.epsilon
-    kWh.meas <- (as.matrix(X)       %*% beta.true)      + mod.epsilon 
+    kWh.bl   <- (as.matrix(X.pre) %*% as.matrix(simCoeff$Value)) + mod.epsilon[1:nrow(X.pre)]
+    kWh.meas <- (as.matrix(X)     %*% simCoeff$Value)            + mod.epsilon 
     true.sav <- sum(kWh.bl[25:36,]-(kWh.meas[25:36,]-coef.event.Y1*X$event_Y1[25:36]))
     consump  <- sum(kWh.meas[25:36,])
     

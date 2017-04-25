@@ -29,22 +29,32 @@
   
   ##  Set project folder)
   if("Margaret.Buffum" %in% dir(file.path("C:","Users"))) projPath <- file.path("C:","Users","Margaret.Buffum" ,"Documents","GitHub","IEPEC SEM")
-  if("Andrew.Bernath"  %in% dir(file.path("C:","Users"))) projPath <- file.path("C:","Users","Andrew.Bernath"  ,"Documents","GitHub","IEPEC SEM")
-  
+  if("andrew.bernath"  %in% dir(file.path("C:","Users"))) projPath <- file.path("C:","Users","andrew.bernath"  ,"Documents","Git","projects","IEPEC_2017-Clash_of_Methodology")
+
   stopifnot(file.exists(projPath))
   
   ################################
   ##### Read/Format Data
   ## Read in SIM data
-  simData <- data.frame(read.csv(file.path(projPath,"Data","Data for Sim.csv"), 
-                                 header=T,
-                                 stringsAsFactors=F))
+  simData <- data.frame(read.xlsx(file.path(projPath,"Data","simData_complex.xlsx")
+                                  , sheetName="Final Facility Data"
+                                  , header=T
+                                  , stringsAsFactors=F))
   head(simData)
   
+  simCoeff <- data.frame(read.xlsx(file.path(projPath,"Data","simData_complex.xlsx")
+                                   , sheetName="Step 2 - Final Model Spec"
+                                   , header=T
+                                   , stringsAsFactors=F
+                                   , rowIndex=c(16:27)
+                                   , colIndex=c(1:2)))
+  names(simCoeff) <- c("Coefficient", "Value")
+  head(simCoeff)
+  
   ##  Format numbers
-  for(ii in 1:length(simData)) {
-    simData[,ii] <- as.numeric(simData[,ii])
-  }
+  # for(ii in 1:length(simData)) {
+  #   simData[,ii] <- as.numeric(simData[,ii])
+  # }
 
   
 ##############################################################################
@@ -53,8 +63,8 @@
   
 ###############  CASE 3: TWO VARIABLES WITH YEAR 1 EVENT  ###############
 
-##  Monthly data with two baseline years
-n.period   <- 36
+##  Daily data with two baseline years and two program years
+n.period   <- 365
 
 ##  Confidence level and Z-Stat for testing true savings capture
 conf   <- 0.80

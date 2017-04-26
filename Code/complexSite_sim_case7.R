@@ -79,7 +79,7 @@ z.stat <- qnorm(1-(1-conf)/2,0,1)
 ##  Facility data input
 beta.true <- simCoeff$Value
 
-X         <- data.frame( rep(1, nrow(simData))
+X.full    <- data.frame( rep(1, nrow(simData))
                         , simData$prod1
                         , simData$prod2
                         , simData$noProd_ind
@@ -93,7 +93,7 @@ X         <- data.frame( rep(1, nrow(simData))
                         , simData$prog_x_noProd
                         , simData$prog_x_prod1_x_HDD55
 )
-names(X) <- c(simCoeff$Coefficient)
+names(X.full) <- c(simCoeff$Coefficient)
 
 
 # -which(names(X)=="prog_ind")
@@ -109,31 +109,51 @@ names(X) <- c(simCoeff$Coefficient)
     # CV for savings estimates
     # Model selection criteria (MSE, AIC, BIC, Adj. R^2)
 
-modError.in <- 0.015*mean(simData$sim_kWh[which(simData$prog_ind == 0)])
-df.in <- X
+modError.in <- 0.02*mean(simData$sim_kWh[which(simData$prog_ind == 0)])
+df.in <- X.full
 
 savingsSim.func <- function(df.in, modError.in) {
   
   ######  TRUE MODEL  ######
   
+  ##  Create vector of model errors
+  # mod.epsilon   <- rnorm(nrow(df.in), 0, modError.in)
+  ##  Create vector of model errors
+  mod.epsilon   <- rep(0,nrow(df.in))
+  
+  ##  Create vector of heteroscedastic model errors
+  # for (ii in 1:nrow(df.in)) mod.epsilon[ii] <- (modError.in+7*df.in$prod1[ii])*rnorm(1,0,1)
+
+  ##  Plot heteroscedasticity for example
+  # plot(df.in$prod1, mod.epsilon, xlab="Production", ylab="Model Error")
+  
+  ##  Create vector of time series model errors
+  mod.epsilon <- arima.sim(list(order=c(2,0,0), 
+                           ar=c(0.4,0.25)), 
+                      n=nrow(df.in), 
+                      rand.gen=function(n) rnorm(n, 0, modError.in))
+  
+  ##  Plot heteroscedasticity for example
+  # plot(mod.epsilon)
+  
+  
+  ##  Create BL and SEM response vectors with true parameters
+  kWh.bl       <- (as.matrix(df.in[,1:7]) %*% simCoeff$Value[1:7]) + mod.epsilon
+  kWh.meas     <- (as.matrix(df.in) %*% simCoeff$Value)            + mod.epsilon
+  true.sav     <- sum(kWh.bl[which(df.in$prog_ind == 1)]) - sum(kWh.meas[which(df.in$prog_ind == 1)]) + 
+                      simCoeff$Value[8]*sum(df.in$event2_post)
+  true.pct     <- true.sav / sum(kWh.bl[which(df.in$prog_ind == 1)])
+  consump.post <- sum(kWh.bl[which(df.in$prog_ind == 1)])
+  
+  ##  Subset design matrix for case specific changes
+  X <- df.in
+  
   ## Separate data into pre/post periods
   X.pre     <- X[which(X$prog_ind == 0),] # two years of pre data
   X.post    <- X[which(X$prog_ind == 1),] # two years of post data
   
-  ##  Create vector of model errors
-  mod.epsilon   <- rnorm(nrow(df.in), 0, modError.in)
-  
-  ##  Create BL and SEM response vectors with true parameters
-  kWh.bl   <- (as.matrix(X[,1:7]) %*% simCoeff$Value[1:7]) + mod.epsilon
-  kWh.meas <- (as.matrix(X) %*% simCoeff$Value)            + mod.epsilon
-  
-  true.sav <- sum(kWh.bl[which(X$prog_ind == 1)]) - sum(kWh.meas[which(X$prog_ind == 1)]) + 
-                  simCoeff$Value[8]*sum(X$event2_post)
-  true.pct <- true.sav / sum(kWh.bl[which(X$prog_ind == 1)])
-  
-  consump  <- sum(kWh.bl)
     
-  ######  FORECAST MODEL  ######
+######  FORECAST MODEL  ######
     
     ##  Estimate model
     FC.mod       <- lm(kWh.meas[which(X$prog_ind == 0)] ~ 
@@ -183,8 +203,8 @@ savingsSim.func <- function(df.in, modError.in) {
                       + noProd_ind 
                       + event1_pre 
                       + HDD55 
-                      + prod1_x_HDD55  
-                      + event2_post 
+                      + prod1_x_HDD55 
+                      + event2_post
                       + prog_ind
                       , data=X)
     SPP.mod.sum <- summary(SPP.mod)
@@ -205,7 +225,6 @@ savingsSim.func <- function(df.in, modError.in) {
     SPP.mod.BIC     <- BIC(SPP.mod)
     
     SPP.mod.incl <- 1
-    
     if( true.sav < (SPP.mod.sav-(z.stat*SPP.mod.seSav)) |
         true.sav > (SPP.mod.sav+(z.stat*SPP.mod.seSav)) ) SPP.mod.incl <- 0
     
@@ -217,11 +236,11 @@ savingsSim.func <- function(df.in, modError.in) {
     FPP.mod     <- lm(kWh.meas ~ 
                         prod1 
                       + prod2 
-                      + noProd_ind 
+                      + noProd_ind  
                       + event1_pre 
                       + HDD55 
                       + prod1_x_HDD55
-                      + event2_post 
+                      + event2_post
                       + prog_ind 
                       + prog_x_prod1 
                       + prog_x_prod2
@@ -277,7 +296,7 @@ savingsSim.func <- function(df.in, modError.in) {
     
     ######  Create output vector
     
-    sim.outVect <- data.frame(consump, true.sav, 
+    sim.outVect <- data.frame(consump.post, true.sav, 
                               FC.mod.sav, SPP.mod.sav, FPP.mod.sav,
                               FC.mod.seSav, SPP.mod.seSav, FPP.mod.seSav,
                               FC.sav.CV, SPP.sav.CV, FPP.sav.CV,
@@ -301,8 +320,8 @@ N.sim <- 10000
 modError <- 0.02*mean(simData$sim_kWh[which(simData$prog_ind == 0)])  ## 2% of average daily kWh
 
 for(ii in 1:N.sim) {
-  if(ii==1) overspec.sim <- savingsSim.func(X, modError)
-  else      overspec.sim <- rbind(overspec.sim, savingsSim.func(X, modError))
+  if(ii==1) overspec.sim <- savingsSim.func(X.full, modError)
+  else      overspec.sim <- rbind(overspec.sim, savingsSim.func(X.full, modError))
 }   
 
 ##  Summarize results of sim
@@ -313,13 +332,11 @@ simSummary <- data.frame(t(colMeans(overspec.sim)))
 # simSummary$SPP.mod.savBias <- simSummary$SPP.mod.sav - simSummary$true.sav
 # simSummary$FPP.mod.savBias <- simSummary$FPP.mod.sav - simSummary$true.sav
 
-simSummary 
 
-write.xlsx(simSummary, file.path(projPath,"Output","simData - Case 1.xlsx"), 
+write.xlsx(simSummary, file.path(projPath,"Output","simData - Case 6.xlsx"), 
            sheetName="Sim Out", col.names=T, row.names=F, append=F)
-write.xlsx(overspec.sim, file.path(projPath,"Output","simData - Case1.xlsx"), 
+write.xlsx(overspec.sim, file.path(projPath,"Output","simData - Case 6.xlsx"), 
            sheetName="Sim Output - prod-hdd-event", col.names=T, row.names=F, append=T)
-
 
 
 

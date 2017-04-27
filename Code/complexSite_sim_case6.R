@@ -118,7 +118,8 @@ savingsSim.func <- function(df.in, modError.in) {
   
   ##  Create vector of model errors
   # mod.epsilon   <- rnorm(nrow(df.in), 0, modError.in)
-  ##  Create vector of model errors
+
+  ##  Create vector of heteroscedastic model errors
   mod.epsilon   <- rep(0,nrow(df.in))
   for (ii in 1:nrow(df.in)) mod.epsilon[ii] <- (modError.in+7*df.in$prod1[ii])*rnorm(1,0,1)
   
@@ -321,9 +322,9 @@ simSummary <- data.frame(t(colMeans(overspec.sim)))
 # simSummary$FPP.mod.savBias <- simSummary$FPP.mod.sav - simSummary$true.sav
 
 
-write.xlsx(simSummary, file.path(projPath,"Output","simData - Case 6.xlsx"), 
+write.xlsx(simSummary, file.path(projPath,"Output","simData_complex - Case 6.xlsx"), 
            sheetName="Sim Out", col.names=T, row.names=F, append=F)
-write.xlsx(overspec.sim, file.path(projPath,"Output","simData - Case 6.xlsx"), 
+write.xlsx(overspec.sim, file.path(projPath,"Output","simData_complex - Case 6.xlsx"), 
            sheetName="Sim Output - prod-hdd-event", col.names=T, row.names=F, append=T)
 
 

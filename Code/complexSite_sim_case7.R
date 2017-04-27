@@ -134,7 +134,7 @@ savingsSim.func <- function(df.in, modError.in) {
                       rand.gen=function(n) rnorm(n, 0, modError.in))
   
   ##  Plot heteroscedasticity for example
-  # plot(mod.epsilon)
+  # plot(mod.epsilon, xlab="Day in Series", ylab="Model Error")
   
   
   ##  Create BL and SEM response vectors with true parameters
@@ -333,9 +333,9 @@ simSummary <- data.frame(t(colMeans(overspec.sim)))
 # simSummary$FPP.mod.savBias <- simSummary$FPP.mod.sav - simSummary$true.sav
 
 
-write.xlsx(simSummary, file.path(projPath,"Output","simData - Case 6.xlsx"), 
+write.xlsx(simSummary, file.path(projPath,"Output","simData - Case 7.xlsx"), 
            sheetName="Sim Out", col.names=T, row.names=F, append=F)
-write.xlsx(overspec.sim, file.path(projPath,"Output","simData - Case 6.xlsx"), 
+write.xlsx(overspec.sim, file.path(projPath,"Output","simData - Case 7.xlsx"), 
            sheetName="Sim Output - prod-hdd-event", col.names=T, row.names=F, append=T)
 
 

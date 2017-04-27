@@ -117,21 +117,21 @@ savingsSim.func <- function(df.in, modError.in) {
   ######  TRUE MODEL  ######
   
   ## Separate data into pre/post periods
-  X.pre     <- X[which(X$prog_ind == 0),] # two years of pre data
-  X.post    <- X[which(X$prog_ind == 1),] # two years of post data
+  X.pre     <- df.in[which(df.in$prog_ind == 0),] # two years of pre data
+  X.post    <- df.in[which(df.in$prog_ind == 1),] # two years of post data
   
   ##  Create vector of model errors
   mod.epsilon   <- rnorm(nrow(df.in), 0, modError.in)
   
   ##  Create BL and SEM response vectors with true parameters
-  kWh.bl   <- (as.matrix(X[,1:7]) %*% simCoeff$Value[1:7]) + mod.epsilon
-  kWh.meas <- (as.matrix(X) %*% simCoeff$Value)            + mod.epsilon
+  kWh.bl   <- (as.matrix(df.in[,1:7]) %*% simCoeff$Value[1:7]) + mod.epsilon
+  kWh.meas <- (as.matrix(df.in[,1:13]) %*% simCoeff$Value)            + mod.epsilon
   
-  true.sav <- sum(kWh.bl[which(X$prog_ind == 1)]) - sum(kWh.meas[which(X$prog_ind == 1)]) + 
-                  simCoeff$Value[8]*sum(X$event2_post)
-  true.pct <- true.sav / sum(kWh.bl[which(X$prog_ind == 1)])
+  true.sav <- sum(kWh.bl[which(df.in$prog_ind == 1)]) - sum(kWh.meas[which(df.in$prog_ind == 1)]) + 
+                  simCoeff$Value[8]*sum(df.in$event2_post)
+  true.pct <- true.sav / sum(kWh.bl[which(df.in$prog_ind == 1)])
   
-  consump  <- sum(kWh.bl)
+  consump.post  <- sum(kWh.bl[which(df.in$prog_ind == 1)])
     
   ######  FORECAST MODEL  ######
     
@@ -277,7 +277,7 @@ savingsSim.func <- function(df.in, modError.in) {
     
     ######  Create output vector
     
-    sim.outVect <- data.frame(consump, true.sav, 
+    sim.outVect <- data.frame(consump.post, true.sav, 
                               FC.mod.sav, SPP.mod.sav, FPP.mod.sav,
                               FC.mod.seSav, SPP.mod.seSav, FPP.mod.seSav,
                               FC.sav.CV, SPP.sav.CV, FPP.sav.CV,
@@ -315,9 +315,9 @@ simSummary <- data.frame(t(colMeans(overspec.sim)))
 
 simSummary 
 
-write.xlsx(simSummary, file.path(projPath,"Output","simData - Case 1.xlsx"), 
+write.xlsx(simSummary, file.path(projPath,"Output","simData_complex - Case 1.xlsx"), 
            sheetName="Sim Out", col.names=T, row.names=F, append=F)
-write.xlsx(overspec.sim, file.path(projPath,"Output","simData - Case1.xlsx"), 
+write.xlsx(overspec.sim, file.path(projPath,"Output","simData_complex - Case 1.xlsx"), 
            sheetName="Sim Output - prod-hdd-event", col.names=T, row.names=F, append=T)
 
 

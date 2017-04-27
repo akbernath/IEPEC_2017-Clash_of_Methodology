@@ -114,16 +114,16 @@ df.in <- X
 
 savingsSim.func <- function(df.in, modError.in) {
   
-  ######  TRUE MODEL  ######
+######  TRUE MODEL  ######
   
-  ## Separate data into pre/post periods
-  X.pre     <- X[which(X$prog_ind == 0),] # two years of pre data
-  X.post    <- X[which(X$prog_ind == 1),] # two years of post data
-  
-  ##  Create vector of model errors
-  mod.epsilon   <- rnorm(nrow(df.in), 0, modError.in)
-  
-  ##  Create BL and SEM response vectors with true parameters
+    ## Separate data into pre/post periods
+    X.pre     <- X[which(X$prog_ind == 0),] # two years of pre data
+    X.post    <- X[which(X$prog_ind == 1),] # two years of post data
+    
+    ##  Create vector of model errors
+    mod.epsilon   <- rnorm(nrow(df.in), 0, modError.in)
+    
+    ##  Create BL and SEM response vectors with true parameters
     kWh.bl   <- (as.matrix(X[,1:7]) %*% simCoeff$Value[1:7]) + mod.epsilon
     kWh.meas <- (as.matrix(X) %*% simCoeff$Value)            + mod.epsilon
     
@@ -133,7 +133,7 @@ savingsSim.func <- function(df.in, modError.in) {
     
     consump.post  <- sum(kWh.bl[which(X$prog_ind == 1)])
     
-  ######  FORECAST MODEL  ######
+######  FORECAST MODEL  ######
     
     ##  Estimate model
     FC.mod       <- lm(kWh.meas[which(X$prog_ind == 0)] ~ 
@@ -276,7 +276,7 @@ savingsSim.func <- function(df.in, modError.in) {
     
     ######  Create output vector
     
-    sim.outVect <- data.frame(consump, true.sav, 
+    sim.outVect <- data.frame(consump.post, true.sav, 
                               FC.mod.sav, SPP.mod.sav, FPP.mod.sav,
                               FC.mod.seSav, SPP.mod.seSav, FPP.mod.seSav,
                               FC.sav.CV, SPP.sav.CV, FPP.sav.CV,
@@ -296,7 +296,7 @@ savingsSim.func <- function(df.in, modError.in) {
 
 
 ##  Repeat the simulation 10,000 times for each model error input
-N.sim <- 10000
+N.sim <- 1000
 modError <- 0.02*mean(simData$sim_kWh[which(simData$prog_ind == 0)])  ## 2% of average daily kWh
 
 for(ii in 1:N.sim) {
@@ -314,9 +314,9 @@ simSummary <- data.frame(t(colMeans(overspec.sim)))
 
 simSummary 
 
-write.xlsx(simSummary, file.path(projPath,"Output","simData - Case 2.xlsx"), 
+write.xlsx(simSummary, file.path(projPath,"Output","simData_complex - Case 2.xlsx"), 
            sheetName="Sim Out", col.names=T, row.names=F, append=F)
-write.xlsx(overspec.sim, file.path(projPath,"Output","simData - Case 2.xlsx"), 
+write.xlsx(overspec.sim, file.path(projPath,"Output","simData_complex - Case 2.xlsx"), 
            sheetName="Sim Output - prod-hdd-event", col.names=T, row.names=F, append=T)
 
 

@@ -51,7 +51,7 @@
                                    , header=T
                                    , stringsAsFactors=F
                                    , rowIndex=c(16:29)
-                                   , colIndex=c(1:2)))[-8,]
+                                   , colIndex=c(1:2)))
   names(simCoeff) <- c("Coefficient", "Value")
   head(simCoeff)
   simCoeff$Coefficient
@@ -79,21 +79,21 @@ z.stat <- qnorm(1-(1-conf)/2,0,1)
 ##  Facility data input
 beta.true <- simCoeff$Value
 
-X         <- data.frame( rep(1, nrow(simData))
+X.full    <- data.frame( rep(1, nrow(simData))
                         , simData$prod1
                         , simData$prod2
                         , simData$noProd_ind
                         , simData$event1_pre
                         , simData$HDD55
                         , simData$prod1_x_HDD55
-                        # , simData$event2_post
+                        , simData$event2_post
                         , simData$prog_ind
                         , simData$prog_x_prod1
                         , simData$prog_x_prod2
                         , simData$prog_x_noProd
                         , simData$prog_x_prod1_x_HDD55
 )
-names(X) <- c(simCoeff$Coefficient)
+names(X.full) <- c(simCoeff$Coefficient)
 
 
 # -which(names(X)=="prog_ind")
@@ -109,29 +109,31 @@ names(X) <- c(simCoeff$Coefficient)
     # CV for savings estimates
     # Model selection criteria (MSE, AIC, BIC, Adj. R^2)
 
-modError.in <- 0.015*mean(simData$sim_kWh[which(simData$prog_ind == 0)])
-df.in <- X
+modError.in <- 0.02*mean(simData$sim_kWh[which(simData$prog_ind == 0)])
+df.in <- X.full
 
 savingsSim.func <- function(df.in, modError.in) {
   
 ######  TRUE MODEL  ######
   
-    ## Separate data into pre/post periods
-    X.pre     <- X[which(X$prog_ind == 0),] # two years of pre data
-    X.post    <- X[which(X$prog_ind == 1),] # two years of post data
-    
     ##  Create vector of model errors
     mod.epsilon   <- rnorm(nrow(df.in), 0, modError.in)
     
     ##  Create BL and SEM response vectors with true parameters
-    kWh.bl   <- (as.matrix(X[,1:7]) %*% simCoeff$Value[1:7]) + mod.epsilon
-    kWh.meas <- (as.matrix(X) %*% simCoeff$Value)            + mod.epsilon
+    kWh.bl   <- (as.matrix(df.in[,1:7]) %*% simCoeff$Value[1:7]) + mod.epsilon
+    kWh.meas <- (as.matrix(df.in) %*% simCoeff$Value)            + mod.epsilon
+    true.sav <- sum(kWh.bl[which(df.in$prog_ind == 1)]) - sum(kWh.meas[which(df.in$prog_ind == 1)]) + 
+                    simCoeff$Value[8]*sum(df.in$event2_post)
+    true.pct <- true.sav / sum(kWh.bl[which(df.in$prog_ind == 1)])
+    consump.post  <- sum(kWh.bl[which(df.in$prog_ind == 1)])
     
-    true.sav <- sum(kWh.bl[which(X$prog_ind == 1)]) - sum(kWh.meas[which(X$prog_ind == 1)]) + 
-                    simCoeff$Value[8]*sum(X$event2_post)
-    true.pct <- true.sav / sum(kWh.bl[which(X$prog_ind == 1)])
+    ##  Subset design matrix for case specific changes
+    X <- df.in[,-8]
     
-    consump.post  <- sum(kWh.bl[which(X$prog_ind == 1)])
+    ## Separate data into pre/post periods
+    X.pre     <- X[which(X$prog_ind == 0),] # two years of pre data
+    X.post    <- X[which(X$prog_ind == 1),] # two years of post data
+    
     
 ######  FORECAST MODEL  ######
     
@@ -296,12 +298,12 @@ savingsSim.func <- function(df.in, modError.in) {
 
 
 ##  Repeat the simulation 10,000 times for each model error input
-N.sim <- 1000
+N.sim <- 10000
 modError <- 0.02*mean(simData$sim_kWh[which(simData$prog_ind == 0)])  ## 2% of average daily kWh
 
 for(ii in 1:N.sim) {
-  if(ii==1) overspec.sim <- savingsSim.func(X, modError)
-  else      overspec.sim <- rbind(overspec.sim, savingsSim.func(X, modError))
+  if(ii==1) overspec.sim <- savingsSim.func(X.full, modError)
+  else      overspec.sim <- rbind(overspec.sim, savingsSim.func(X.full, modError))
 }   
 
 ##  Summarize results of sim

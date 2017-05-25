@@ -54,8 +54,7 @@
                                    , colIndex=c(1:2)))
   names(simCoeff) <- c("Coefficient", "Value")
   head(simCoeff)
-  simCoeff <- simCoeff[c(1:5,7:8,6,9:13),]
-  
+
   ##  Format numbers
   for(ii in 2:length(simData)) {
     simData[,ii] <- as.numeric(simData[,ii])

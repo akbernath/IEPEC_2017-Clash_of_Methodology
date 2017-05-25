@@ -123,7 +123,7 @@ savingsSim.func <- function(df.in, modError.in) {
     kWh.bl   <- (as.matrix(df.in[,1:7]) %*% simCoeff$Value[1:7]) + mod.epsilon
     kWh.meas <- (as.matrix(df.in) %*% simCoeff$Value)            + mod.epsilon
     true.sav <- sum(kWh.bl[which(df.in$prog_ind == 1)]) - sum(kWh.meas[which(df.in$prog_ind == 1)]) + 
-                    simCoeff$Value[8]*sum(df.in$event2_post)
+                    simCoeff$Value[6]*sum(df.in$event2_post)
     true.pct <- true.sav / sum(kWh.bl[which(df.in$prog_ind == 1)])
     consump.post  <- sum(kWh.bl[which(df.in$prog_ind == 1)])
     

@@ -54,8 +54,8 @@
                                    , colIndex=c(1:2)))
   names(simCoeff) <- c("Coefficient", "Value")
   head(simCoeff)
-  simCoeff$Coefficient
-
+  simCoeff <- simCoeff[c(1:5,7:8,6,9:13),]
+  
   ##  Format numbers
   for(ii in 2:length(simData)) {
     simData[,ii] <- as.numeric(simData[,ii])
@@ -109,7 +109,7 @@ names(X) <- c(simCoeff$Coefficient)
     # CV for savings estimates
     # Model selection criteria (MSE, AIC, BIC, Adj. R^2)
 
-modError.in <- 0.015*mean(simData$sim_kWh[which(simData$prog_ind == 0)])
+modError.in <- 0.02*mean(simData$sim_kWh[which(simData$prog_ind == 0)])
 df.in <- X
 
 savingsSim.func <- function(df.in, modError.in) {
@@ -125,39 +125,42 @@ savingsSim.func <- function(df.in, modError.in) {
   
   ##  Create BL and SEM response vectors with true parameters
   kWh.bl   <- (as.matrix(df.in[,1:7]) %*% simCoeff$Value[1:7]) + mod.epsilon
-  kWh.meas <- (as.matrix(df.in[,1:13]) %*% simCoeff$Value)            + mod.epsilon
-  
+  kWh.meas <- (as.matrix(df.in[,1:13]) %*% simCoeff$Value)     + mod.epsilon
+
   true.sav <- sum(kWh.bl[which(df.in$prog_ind == 1)]) - sum(kWh.meas[which(df.in$prog_ind == 1)]) + 
                   simCoeff$Value[8]*sum(df.in$event2_post)
   true.pct <- true.sav / sum(kWh.bl[which(df.in$prog_ind == 1)])
   
   consump.post  <- sum(kWh.bl[which(df.in$prog_ind == 1)])
-    
+   
+  pairs(X.pre[,c(2:7)])
+  
+   
   ######  FORECAST MODEL  ######
     
     ##  Estimate model
-    FC.mod       <- lm(kWh.meas[which(X$prog_ind == 0)] ~ 
+    FC.mod       <- lm(kWh.meas[which(df.in$prog_ind == 0)] ~ 
                          prod1 
                        + prod2 
                        + noProd_ind 
                        + event1_pre 
                        + HDD55 
                        + prod1_x_HDD55
-                       , data=X[which(X$prog_ind == 0),])
+                       , data=X.pre)
     FC.mod.sum   <- summary(FC.mod)
     FC.mod.b.hat <- FC.mod$coeff
     
     ##  Model selection criteria
     FC.mod.RMSE    <- sqrt(mean(residuals(FC.mod)^2))
-    FC.mod.relRMSE <- FC.mod.RMSE/mean(kWh.meas[which(X$prog_ind == 0)])
+    FC.mod.relRMSE <- FC.mod.RMSE/mean(kWh.meas[which(df.in$prog_ind == 0)])
     FC.mod.adjR2   <- FC.mod.sum$adj.r.squared
     FC.mod.AIC     <- AIC(FC.mod)
     FC.mod.BIC     <- BIC(FC.mod)
     
     ##  Compute savings estimate
     FC.mod.preds  <- as.matrix(X.post[,1:7]) %*% as.matrix(FC.mod.b.hat)
-    FC.mod.sav    <- sum(FC.mod.preds - kWh.meas[which(X$prog_ind == 1)]) + 
-                          simCoeff$Value[8]*sum(X$event2_post)
+    FC.mod.sav    <- sum(FC.mod.preds - kWh.meas[which(df.in$prog_ind == 1)]) + 
+                          simCoeff$Value[8]*sum(df.in$event2_post)
     FC.mod.bias   <- true.sav - FC.mod.sav
     FC.mod.pctErr <- FC.mod.bias/true.sav
       
@@ -186,9 +189,9 @@ savingsSim.func <- function(df.in, modError.in) {
                       + prod1_x_HDD55  
                       + event2_post 
                       + prog_ind
-                      , data=X)
+                      , data=df.in)
     SPP.mod.sum <- summary(SPP.mod)
-    
+    head(df.in)
 
     ##  Estimate savings & SE(savings)
     SPP.mod.sav    <- -1*SPP.mod$coeff[which(names(SPP.mod$coefficients) == "prog_ind")]*sum(X.post$prog_ind)
@@ -227,7 +230,7 @@ savingsSim.func <- function(df.in, modError.in) {
                       + prog_x_prod2
                       + prog_x_noProd 
                       + prog_x_prod1_x_HDD55
-                      , data=X)
+                      , data=df.in)
     FPP.mod.sum <- summary(FPP.mod)
     
     ##  Estimate savings & SE(savings)

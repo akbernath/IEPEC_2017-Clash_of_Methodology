@@ -109,7 +109,7 @@ names(X.full) <- c(simCoeff$Coefficient)
     # CV for savings estimates
     # Model selection criteria (MSE, AIC, BIC, Adj. R^2)
 
-modError.in <- 0.015*mean(simData$sim_kWh[which(simData$prog_ind == 0)])
+modError.in <- 0.02*mean(simData$sim_kWh[which(simData$prog_ind == 0)])
 df.in <- X.full
 
 savingsSim.func <- function(df.in, modError.in) {
@@ -309,9 +309,9 @@ simSummary <- data.frame(t(colMeans(overspec.sim)))
 
 simSummary 
 
-write.xlsx(simSummary, file.path(projPath,"Output","simData - Case 4.xlsx"), 
+write.xlsx(simSummary, file.path(projPath,"Output","simData_complex - Case 4.xlsx"), 
            sheetName="Sim Out", col.names=T, row.names=F, append=F)
-write.xlsx(overspec.sim, file.path(projPath,"Output","simData - Case 4.xlsx"), 
+write.xlsx(overspec.sim, file.path(projPath,"Output","simData_complex - Case 4.xlsx"), 
            sheetName="Sim Output - prod-hdd-event", col.names=T, row.names=F, append=T)
 
 

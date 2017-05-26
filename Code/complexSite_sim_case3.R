@@ -109,7 +109,7 @@ names(X.full) <- c(simCoeff$Coefficient)
     # CV for savings estimates
     # Model selection criteria (MSE, AIC, BIC, Adj. R^2)
 
-modError.in <- 0.015*mean(simData$sim_kWh[which(simData$prog_ind == 0)])
+modError.in <- 0.02*mean(simData$sim_kWh[which(simData$prog_ind == 0)])
 df.in <- X.full
 
 savingsSim.func <- function(df.in, modError.in) {
@@ -128,6 +128,7 @@ savingsSim.func <- function(df.in, modError.in) {
     true.pct      <- true.sav / sum(kWh.bl[which(df.in$prog_ind == 1)])
     consump.post  <- sum(kWh.bl[which(df.in$prog_ind == 1)])
 
+    
     ##  Subset design matrix for case specific changes
     X <- df.in[,-c(6,7,13)]
     
@@ -140,7 +141,12 @@ savingsSim.func <- function(df.in, modError.in) {
     
     ##  Estimate model
     FC.mod       <- lm(kWh.meas[which(X$prog_ind == 0)] ~ 
-                         prod1 + prod2 + noProd_ind + event1_pre #+ HDD55 + prod1_x_HDD55
+                         prod1 
+                       + prod2 
+                       + noProd_ind 
+                       + event1_pre 
+                       #+ HDD55 
+                       #+ prod1_x_HDD55
                        , data=X[which(X$prog_ind == 0),])
     FC.mod.sum   <- summary(FC.mod)
     FC.mod.b.hat <- FC.mod$coeff
@@ -304,9 +310,9 @@ simSummary <- data.frame(t(colMeans(overspec.sim)))
 
 simSummary 
 
-write.xlsx(simSummary, file.path(projPath,"Output","simData - Case 3.xlsx"), 
+write.xlsx(simSummary, file.path(projPath,"Output","simData_complex - Case 3.xlsx"), 
            sheetName="Sim Out", col.names=T, row.names=F, append=F)
-write.xlsx(overspec.sim, file.path(projPath,"Output","simData - Case 3.xlsx"), 
+write.xlsx(overspec.sim, file.path(projPath,"Output","simData_complex - Case 3.xlsx"), 
            sheetName="Sim Output - prod-hdd-event", col.names=T, row.names=F, append=T)
 
 

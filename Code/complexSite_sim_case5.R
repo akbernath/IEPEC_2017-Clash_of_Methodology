@@ -317,8 +317,8 @@ N.sim <- 10000
 modError <- 0.02*mean(simData$sim_kWh[which(simData$prog_ind == 0)])  ## 2% of average daily kWh
 
 for(ii in 1:N.sim) {
-  if(ii==1) overspec.sim <- savingsSim.func(X, modError)
-  else      overspec.sim <- rbind(overspec.sim, savingsSim.func(X, modError))
+  if(ii==1) overspec.sim <- savingsSim.func(X.full, modError)
+  else      overspec.sim <- rbind(overspec.sim, savingsSim.func(X.full, modError))
 }   
 
 ##  Summarize results of sim
@@ -331,9 +331,9 @@ simSummary <- data.frame(t(colMeans(overspec.sim)))
 
 simSummary 
 
-write.xlsx(simSummary, file.path(projPath,"Output","simData - Case 5.xlsx"), 
+write.xlsx(simSummary, file.path(projPath,"Output","simData_complex - Case 5.xlsx"), 
            sheetName="Sim Out", col.names=T, row.names=F, append=F)
-write.xlsx(overspec.sim, file.path(projPath,"Output","simData - Case 5.xlsx"), 
+write.xlsx(overspec.sim, file.path(projPath,"Output","simData_complex - Case 5.xlsx"), 
            sheetName="Sim Output - prod-hdd-event", col.names=T, row.names=F, append=T)
 
 

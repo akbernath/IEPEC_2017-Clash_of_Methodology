@@ -108,7 +108,7 @@ names(X) <- c(simCoeff$Coefficient)
     # CV for savings estimates
     # Model selection criteria (MSE, AIC, BIC, Adj. R^2)
 
-modError.in <- 0.02*mean(simData$sim_kWh[which(simData$prog_ind == 0)])
+modError.in <- 0.015*mean(simData$sim_kWh[which(simData$prog_ind == 1)])
 df.in <- X
 
 savingsSim.func <- function(df.in, modError.in) {
@@ -132,9 +132,8 @@ savingsSim.func <- function(df.in, modError.in) {
   
   consump.post  <- sum(kWh.bl[which(df.in$prog_ind == 1)])
    
-  pairs(X.pre[,c(2:7)])
-  
-   
+  # pairs(X.pre[,c(2:7)])
+
   ######  FORECAST MODEL  ######
     
     ##  Estimate model
@@ -207,7 +206,6 @@ savingsSim.func <- function(df.in, modError.in) {
     SPP.mod.BIC     <- BIC(SPP.mod)
     
     SPP.mod.incl <- 1
-    
     if( true.sav < (SPP.mod.sav-(z.stat*SPP.mod.seSav)) |
         true.sav > (SPP.mod.sav+(z.stat*SPP.mod.seSav)) ) SPP.mod.incl <- 0
     

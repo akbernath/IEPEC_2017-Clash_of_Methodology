@@ -108,7 +108,7 @@ names(X) <- c(simCoeff$Coefficient)
     # CV for savings estimates
     # Model selection criteria (MSE, AIC, BIC, Adj. R^2)
 
-modError.in <- 0.015*mean(simData$sim_kWh[which(simData$prog_ind == 1)])
+modError.in <- 0.02*mean(simData$sim_kWh[which(simData$prog_ind == 1)])
 df.in <- X
 
 savingsSim.func <- function(df.in, modError.in) {

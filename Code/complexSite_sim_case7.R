@@ -334,9 +334,9 @@ simSummary
 # simSummary$FPP.mod.savBias <- simSummary$FPP.mod.sav - simSummary$true.sav
 
 
-write.xlsx(simSummary, file.path(projPath,"Output","simData - Case 7.xlsx"), 
+write.xlsx(simSummary, file.path(projPath,"Output","simData_complex - Case 7.xlsx"), 
            sheetName="Sim Out", col.names=T, row.names=F, append=F)
-write.xlsx(overspec.sim, file.path(projPath,"Output","simData - Case 7.xlsx"), 
+write.xlsx(overspec.sim, file.path(projPath,"Output","simData_complex - Case 7.xlsx"), 
            sheetName="Sim Output - prod-hdd-event", col.names=T, row.names=F, append=T)
 
 
